@@ -2,28 +2,33 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# --- Page config and global styles ---
-st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara", page_icon="📊", layout="centered")
-
 st.markdown("""
     <style>
     .stApp { background-color: #f5e6c4; }
     .center-logo {
-        display: flex; justify-content: center; align-items: center;
-        margin-top: -50px; margin-bottom: 10px;
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .center-logo img {
+        display: block;
+        margin: 0 auto;
+        width: 360px; /* adjust as needed */
     }
     .title-text {
-        font-size: 32px; font-weight: 1000; text-align: center; color: #4e342e; margin: 6px 0;
+        font-size: 48px; font-weight: 1000; text-align: center; color: #4e342e; margin: 10px 0;
     }
     .subtitle-text {
-        font-size: 20px; text-align: center; color: #4e342e; margin: 2px 0 10px 0;
+        font-size: 30px; text-align: center; color: #4e342e; margin: 6px 0 20px 0;
     }
     .description-text {
-        font-size: 16px; text-align: center; color: #4e342e; margin: 8px auto 22px auto; max-width: 800px; line-height: 1.5;
+        font-size: 20px; text-align: center; color: #4e342e; margin: 12px auto 30px auto; max-width: 900px; line-height: 1.6;
     }
-    .section-title { text-align: center; font-weight: 600; color:#4e342e; margin: 10px 0 18px 0; }
+    .section-title { text-align: center; font-weight: 700; font-size: 24px; color:#4e342e; margin: 14px 0 22px 0; }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- Database setup ---
 conn = sqlite3.connect("applicants.db")
@@ -69,9 +74,7 @@ def intro_screen():
     st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
 
-    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    st.image("logo.png", width=320)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="center-logo"><img src="logo.png" alt="SDG 8 Logo"></div>', unsafe_allow_html=True)
 
     st.markdown("""
         <p class="description-text">
@@ -87,6 +90,7 @@ def intro_screen():
     with col2:
         if st.button("Exit Application"):
             st.info("You may now close this tab.")
+
 
 # --- Account creation (enforced before applicant login) ---
 def create_account(username: str, password: str):
