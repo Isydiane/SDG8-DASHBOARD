@@ -27,7 +27,16 @@ if "proceed" not in st.session_state:
 def intro_screen():
     st.markdown("""
         <style>
-        .stApp { background-color: #f5e6c4; }
+        .stApp {
+            background-color: #f5e6c4;
+        }
+        .center-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: -30px;
+            margin-bottom: 10px;
+        }
         .title-text {
             font-size: 32px;
             font-weight: bold;
@@ -39,20 +48,29 @@ def intro_screen():
             text-align: center;
             color: #6d4c41;
         }
+        .description-text {
+            font-size: 16px;
+            text-align: center;
+            color: #5d4037;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
     st.image("logo.png", width=250)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<p class='title-text'>Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle-text'>SDG 8: Decent Work and Economic Growth</p>", unsafe_allow_html=True)
+    st.markdown('<p class="title-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle-text">SDG 8: Decent Work and Economic Growth</p>', unsafe_allow_html=True)
 
-    st.write("""
-    This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.  
-    It focuses on protecting workers’ rights, supporting businesses, reducing unemployment, and ensuring equal opportunities for all.
-    """)
+    st.markdown("""
+        <p class="description-text">
+        This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.<br>
+        It focuses on protecting workers’ rights, supporting businesses, reducing unemployment, and ensuring equal opportunities for all.
+        </p>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -136,31 +154,14 @@ def show_applicant_dashboard(username):
     if st.button("Schedule Interview"):
         st.success(f"📅 Interview scheduled for:\n\n**{selected_job}**\nTomorrow at 9:00 AM")
 
-# --- Main Dashboard ---
-def main():
-    st.subheader("📊 Youth Employment Statistics")
-    st.bar_chart(df.set_index("Age_Group")["Unemployment_Rate (%)"])
-    st.bar_chart(df.set_index("Age_Group")["Underemployment_Rate (%)"])
-    st.line_chart(df.set_index("Age_Group")["NEET_Rate (%)"])
-    st.bar_chart(df.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+# --- Login Screen ---
+def login_screen():
+    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
+    st.image("logo.png", width=200)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.subheader("💼 Job Opportunities")
-    JOB_LIST = [
-        ("Cashier (Local Store)", 12000),
-        ("Service Crew", 10000),
-        ("Data Encoder", 14000),
-        ("Barangay Support Staff", 11000),
-        ("Warehouse Helper", 13000),
-        ("Factory Worker (Santa Barbara)", 14000),
-        ("Rice Mill Operator", 16000),
-        ("Municipal Office Clerk", 15000),
-        ("Call Center Trainee (Iloilo City)", 18000),
-        ("IT Assistant Intern", 12000),
-    ]
-    jobs_df = pd.DataFrame(JOB_LIST, columns=["Job Title", "Monthly Salary"])
-    st.table(jobs_df)
+    st.markdown("<h2 style='text-align:center;'>🔐 Login Portal</h2>", unsafe_allow_html=True)
 
-    st.subheader("🔐 Login Portal")
     user_type = st.selectbox("Select User Type", ["Applicant", "Admin"])
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -189,6 +190,6 @@ def main():
 
 # --- Run App ---
 if st.session_state["proceed"]:
-    main()
+    login_screen()
 else:
     intro_screen()
