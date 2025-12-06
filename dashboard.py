@@ -169,35 +169,27 @@ def login_screen():
     # --- Applicant must have account first ---
     col1, col2, col3 = st.columns([1,2,1])
     with col2: 
-     if st.button("🔵 Login", use_container_width=True):
-        if user_type == "Admin" and username == "admin" and password == "1234":
-            st.success("Welcome Admin!")
-            show_admin_dashboard()
-        elif user_type == "Applicant":
-            cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
-            row = cursor.fetchone()
-            if row is None:
-                st.error("No account found. Please create an account first before logging in.")
-            else:
-                if row[0] == password:
-                    st.success(f"Welcome {username}!")
-                    show_applicant_dashboard(username)
+        if st.button("Login", use_container_width=True):
+            if user_type == "Admin" and username == "admin" and password == "1234":
+                st.success("Welcome Admin!")
+                show_admin_dashboard()
+            elif user_type == "Applicant":
+                cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
+                row = cursor.fetchone()
+                if row is None:
+                    st.error("No account found. Please create an account first before logging in.")
                 else:
-                    st.error("Incorrect password.")
+                    if row[0] == password:
+                        st.success(f"Welcome {username}!")
+                        show_applicant_dashboard(username)
+                    else:
+                        st.error("Incorrect password.")
 
-    if st.button("Create Account", use_container_width=True):
-        create_account(username, password)
+        if st.button("Create Account", use_container_width=True):
+            create_account(username, password)
 
-    if st.button("Back to Intro", use_container_width=True):
-        st.session_state["stage"] = "intro"
-
-    # --- Account creation always available ---
-    if st.button("Create Account"):
-        create_account(username, password)
-
-    if st.button("Back to Intro"):
-        st.session_state["stage"] = "intro"
-
+        if st.button("Back to Intro", use_container_width=True):
+            st.session_state["stage"] = "intro"
 
 # --- Router ---
 if "stage" not in st.session_state:
