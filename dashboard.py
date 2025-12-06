@@ -198,6 +198,9 @@ def login_screen():
                     st.session_state["username"] = username
                     st.session_state["stage"] = "dashboard"
 
+                if st.button("📊 View Youth Charts", use_container_width=True):
+                    st.session_state["stage"] = "charts"
+
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
 
@@ -209,3 +212,10 @@ if st.session_state["stage"] == "intro":
     intro_screen()
 elif st.session_state["stage"] == "login":
     login_screen()
+elif st.session_state["stage"] == "dashboard":
+    show_applicant_dashboard(st.session_state["username"])
+elif st.session_state["stage"] == "admin":
+    show_admin_dashboard()
+elif st.session_state["stage"] == "charts":
+    show_youth_charts() # type: ignore
+
