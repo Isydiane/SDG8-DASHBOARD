@@ -57,8 +57,7 @@ def intro_screen():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("✅ Click to Proceed to Login"):
-    st.session_state["proceed"] = True
-
+            st.session_state["proceed"] = True
     with col2:
         if st.button("❌ Exit Application"):
             st.warning("Thank you for visiting. You may now close the tab.")
@@ -187,7 +186,6 @@ def main():
     with col3:
         if st.button("🔴 Back to Intro"):
             st.session_state["proceed"] = False
-            st.experimental_rerun()
 
 # --- Run App ---
 if st.session_state["proceed"]:
