@@ -9,8 +9,20 @@ st.markdown("""
     <style>
     .stApp { background-color: #f5e6c4; }
     .center-logo {
-        display: flex; justify-content: center; align-items: center;
-        margin-top: 60px; margin-bottom: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 60px;
+        margin-bottom: 0px;
+    }
+    .center-logo img {
+        display: block;
+        margin: 0 auto;
+        width: 320px; /* adjust size as needed */
+    }
+    </style>
+""", unsafe_allow_html=True)
+
     }
     .title-text {
         font-size: 32px; font-weight: 1000; text-align: center; color: #4e342e; margin: 6px 0;
@@ -198,5 +210,6 @@ if st.session_state["stage"] == "intro":
     intro_screen()
 elif st.session_state["stage"] == "login":
     login_screen()
+
 
 
