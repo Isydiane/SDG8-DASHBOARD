@@ -65,14 +65,13 @@ def get_age_group(age: int):
     if 26 <= age <= 30: return "26-30"
     return None
 
+# --- Intro screen ---
 def intro_screen():
     st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
-
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
     st.image("logo.png", width=320)
     st.markdown('</div>', unsafe_allow_html=True)
-
     st.markdown("""
         <p class="description-text">
         This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.<br>
@@ -80,16 +79,14 @@ def intro_screen():
         </p>
     """, unsafe_allow_html=True)
 
-    # --- Centered buttons ---
-    col1, col2, col3 = st.columns([1,2,1])  # middle column wider
+    col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button("Click to Proceed to Login", use_container_width=True):
             st.session_state["stage"] = "login"
         if st.button("Exit Application", use_container_width=True):
             st.info("You may now close this tab.")
 
-
-# --- Account creation (enforced before applicant login) ---
+# --- Account creation ---
 def create_account(username: str, password: str):
     if not username or not password:
         st.error("Please enter a username and password.")
@@ -97,38 +94,15 @@ def create_account(username: str, password: str):
     try:
         cursor.execute("INSERT INTO applicant_credentials (username, password) VALUES (?, ?)", (username.strip(), password))
         conn.commit()
-        st.success("Account created successfully! You can now log in.")
         return True
     except sqlite3.IntegrityError:
         st.error("Username already exists. Please choose another.")
         return False
 
 # --- Applicant dashboard ---
-# --- Applicant dashboard ---
 def show_applicant_dashboard(username: str):
-    ...
-    
-# --- Admin dashboard ---
-def show_admin_dashboard():
-    ...
-
-# --- Youth charts (separate view) ---
-def show_youth_charts():
-    st.markdown('<h3 class="section-title">Youth Economic Charts</h3>', unsafe_allow_html=True)
-    st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
-    st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("Back to Login", use_container_width=True):
-            st.session_state["stage"] = "login"
-
-# --- Login screen ---
-def login_screen():
-    ...
-
+    st.markdown('<h3 class="section-title">Applicant Dashboard</h3>', unsafe_allow_html=True)
+    st.write("Submit your resume and view job opportunities and recommendations.")
 
     full_name = st.text_input("Full Name")
     age = st.number_input("Age", min_value=18, max_value=30, value=18)
@@ -171,24 +145,36 @@ def show_admin_dashboard():
         applicants = pd.DataFrame(columns=["id","full_name","age","age_group","address","skills","education","experience"])
     st.dataframe(applicants, use_container_width=True)
 
+# --- Youth charts ---
+def show_youth_charts():
+    st.markdown('<h3 class="section-title">Youth Economic Charts</h3>', unsafe_allow_html=True)
+    st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+    st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+    st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+    st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        if st.button("Back to Login", use_container_width=True):
+            st.session_state["stage"] = "login"
+
+# --- Login screen ---
 def login_screen():
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
     st.image("logo.png", width=260)
     st.markdown('</div>', unsafe_allow_html=True)
-
     st.markdown("<h3 style='text-align:center; color:#4e342e;'>Login Portal</h3>", unsafe_allow_html=True)
 
     user_type = st.selectbox("Select User Type:", ["Applicant", "Admin"])
     username = st.text_input("Username:")
     password = st.text_input("Password:", type="password")
 
-    # --- Applicant must have account first ---
     col1, col2, col3 = st.columns([1,2,1])
-    with col2: 
+    with col2:
         if st.button("Login", use_container_width=True):
             if user_type == "Admin" and username == "admin" and password == "1234":
                 st.success("Welcome Admin!")
-                show_admin_dashboard()
+                st.session_state["stage"] = "admin"
             elif user_type == "Applicant":
                 cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
                 row = cursor.fetchone()
@@ -197,11 +183,11 @@ def login_screen():
                 else:
                     if row[0] == password:
                         st.success(f"Welcome {username}!")
-                        show_applicant_dashboard(username)
+                        st.session_state["username"] = username
+                        st.session_state["stage"] = "dashboard"
                     else:
                         st.error("Incorrect password.")
 
-         # ✅ Create Account only triggers if both fields are filled
         if st.button("Create Account", use_container_width=True):
             if not username or not password:
                 st.error("Please enter a username and password.")
