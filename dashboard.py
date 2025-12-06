@@ -146,7 +146,7 @@ def show_admin_dashboard():
     st.dataframe(applicants, use_container_width=True)
 
 # --- Youth charts ---
-ddef show_youth_charts():
+def show_youth_charts():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Youth Economic Indicators by Age Group</h4>', unsafe_allow_html=True)
 
