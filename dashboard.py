@@ -2,12 +2,20 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# --- Page config and global styles ---
-st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara", page_icon="📊", layout="centered")
+# --- Page config ---
+st.set_page_config(
+    page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara",
+    page_icon="📊",
+    layout="centered"
+)
 
+# --- Responsive CSS ---
 st.markdown("""
     <style>
-    .stApp { background-color: #f5e6c4; }
+    .stApp {
+        background-color: #f5e6c4;
+        padding: 0 10px;
+    }
 
     /* Center logo and make it responsive */
     .center-logo {
@@ -24,30 +32,49 @@ st.markdown("""
 
     /* Text sizes scaled for mobile */
     .title-text {
-        font-size: 24px; font-weight: 1000;
-        text-align: center; color: #4e342e;
+        font-size: 4.5vw;
+        font-weight: 1000;
+        text-align: center;
+        color: #4e342e;
         margin: 6px 0;
     }
     .subtitle-text {
-        font-size: 16px; text-align: center;
-        color: #4e342e; margin: 4px 0 12px 0;
+        font-size: 3.5vw;
+        text-align: center;
+        color: #4e342e;
+        margin: 4px 0 12px 0;
     }
     .description-text {
-        font-size: 14px; text-align: center;
-        color: #4e342e; margin: 10px auto 20px auto;
-        max-width: 95%; line-height: 1.4;
+        font-size: 3vw;
+        text-align: center;
+        color: #4e342e;
+        margin: 10px auto 20px auto;
+        max-width: 95%;
+        line-height: 1.4;
     }
     .section-title {
-        text-align: center; font-weight: 600;
-        font-size: 18px; color:#4e342e;
+        text-align: center;
+        font-weight: 600;
+        font-size: 3.5vw;
+        color:#4e342e;
         margin: 12px 0 16px 0;
     }
 
     /* Buttons full width on mobile */
     .stButton>button {
         width: 100%;
-        height: 40px;
-        font-size: 14px;
+        height: 42px;
+        font-size: 3.5vw;
+        margin-top: 6px;
+    }
+
+    /* Desktop overrides */
+    @media (min-width: 768px) {
+        .title-text { font-size: 32px; }
+        .subtitle-text { font-size: 24px; }
+        .description-text { font-size: 18px; }
+        .section-title { font-size: 22px; }
+        .stButton>button { font-size: 16px; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -76,7 +103,7 @@ CREATE TABLE IF NOT EXISTS applicants (
 """)
 conn.commit()
 
-# --- Initial data and helpers ---
+# --- Initial data ---
 INITIAL_DATA = {
     "Age_Group": ["18-21", "22-25", "26-30"],
     "Unemployment_Rate (%)": [14.5, 10.2, 6.7],
@@ -200,18 +227,3 @@ def login_screen():
                 else:
                     st.error("Incorrect password.")
             else:
-                st.error("No account found. Please create an account first.")
-
-    if st.button("Create Account"):
-        create_account(username, password)
-    if st.button("Back to Intro"):
-        st.session_state["stage"] = "intro"
-
-# --- Router ---
-if "stage" not in st.session_state:
-    st.session_state["stage"] = "intro"
-
-if st.session_state["stage"] == "intro":
-    intro_screen()
-elif st.session_state["stage"] == "login":
-    login_screen()
