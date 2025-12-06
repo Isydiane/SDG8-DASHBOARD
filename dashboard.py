@@ -65,14 +65,13 @@ def get_age_group(age: int):
     if 26 <= age <= 30: return "26-30"
     return None
 
-# --- Intro screen (matches your design) ---
 def intro_screen():
-    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    st.image("logo.png", width=300)
-    st.markdown('</div>', unsafe_allow_html=True)
-
     st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
+
+    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
+    st.image("logo.png", width=320)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
         <p class="description-text">
