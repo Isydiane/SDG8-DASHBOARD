@@ -167,7 +167,9 @@ def login_screen():
     password = st.text_input("Password:", type="password")
 
     # --- Applicant must have account first ---
-    if st.button("🔵 Login"):
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2: 
+     if st.button("🔵 Login"):
         if user_type == "Admin" and username == "admin" and password == "1234":
             st.success("Welcome Admin!")
             show_admin_dashboard()
