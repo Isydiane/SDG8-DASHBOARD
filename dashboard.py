@@ -190,8 +190,8 @@ def login_screen():
             if not username or not password:
                 st.error("Please enter a username and password.")
             else:
-                  success = create_account(username, password)
-        if success:
+               account_created = create_account(username, password)
+        if account_created:
             st.success(f"Welcome {username}! Your account has been created.")
             show_applicant_dashboard(username)
 
