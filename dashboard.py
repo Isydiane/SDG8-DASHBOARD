@@ -2,80 +2,26 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# --- Page config ---
-st.set_page_config(
-    page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara",
-    page_icon="📊",
-    layout="centered"
-)
+# --- Page config and global styles ---
+st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara", page_icon="📊", layout="centered")
 
-# --- Responsive CSS ---
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #f5e6c4;
-        padding: 0 10px;
-    }
-
-    /* Center logo and make it responsive */
+    .stApp { background-color: #f5e6c4; }
     .center-logo {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 10px;
-        margin-bottom: 10px;
+        display: flex; justify-content: center; align-items: center;
+        margin-top: 0px; margin-bottom: 0px; width: 60px;
     }
-    .center-logo img {
-        max-width: 80%;   /* scales down on small screens */
-        height: auto;
-    }
-
-    /* Text sizes scaled for mobile */
     .title-text {
-        font-size: 4.5vw;
-        font-weight: 1000;
-        text-align: center;
-        color: #4e342e;
-        margin: 6px 0;
+        font-size: 32px; font-weight: 1000; text-align: center; color: #4e342e; margin: 6px 0;
     }
     .subtitle-text {
-        font-size: 3.5vw;
-        text-align: center;
-        color: #4e342e;
-        margin: 4px 0 12px 0;
+        font-size: 20px; text-align: center; color: #4e342e; margin: 2px 0 10px 0;
     }
     .description-text {
-        font-size: 3vw;
-        text-align: center;
-        color: #4e342e;
-        margin: 10px auto 20px auto;
-        max-width: 95%;
-        line-height: 1.4;
+        font-size: 16px; text-align: center; color: #4e342e; margin: 8px auto 22px auto; max-width: 800px; line-height: 1.5;
     }
-    .section-title {
-        text-align: center;
-        font-weight: 600;
-        font-size: 3.5vw;
-        color:#4e342e;
-        margin: 12px 0 16px 0;
-    }
-
-    /* Buttons full width on mobile */
-    .stButton>button {
-        width: 100%;
-        height: 42px;
-        font-size: 3.5vw;
-        margin-top: 6px;
-    }
-
-    /* Desktop overrides */
-    @media (min-width: 768px) {
-        .title-text { font-size: 32px; }
-        .subtitle-text { font-size: 24px; }
-        .description-text { font-size: 18px; }
-        .section-title { font-size: 22px; }
-        .stButton>button { font-size: 16px; }
-    }
+    .section-title { text-align: center; font-weight: 600; color:#4e342e; margin: 10px 0 18px 0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,7 +49,7 @@ CREATE TABLE IF NOT EXISTS applicants (
 """)
 conn.commit()
 
-# --- Initial data ---
+# --- Initial data and helpers ---
 INITIAL_DATA = {
     "Age_Group": ["18-21", "22-25", "26-30"],
     "Unemployment_Rate (%)": [14.5, 10.2, 6.7],
@@ -119,12 +65,13 @@ def get_age_group(age: int):
     if 26 <= age <= 30: return "26-30"
     return None
 
-# --- Intro screen ---
 def intro_screen():
     st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
 
-    st.markdown('<div class="center-logo"><img src="logo.png" alt="SDG 8 Logo"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
+    st.image("logo.png", width=320)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
         <p class="description-text">
@@ -133,12 +80,15 @@ def intro_screen():
         </p>
     """, unsafe_allow_html=True)
 
-    if st.button("Click to Proceed to Login"):
-        st.session_state["stage"] = "login"
-    if st.button("Exit Application"):
-        st.info("You may now close this tab.")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Click to Proceed to Login"):
+            st.session_state["stage"] = "login"
+    with col2:
+        if st.button("Exit Application"):
+            st.info("You may now close this tab.")
 
-# --- Account creation ---
+# --- Account creation (enforced before applicant login) ---
 def create_account(username: str, password: str):
     if not username or not password:
         st.error("Please enter a username and password.")
@@ -204,27 +154,47 @@ def show_admin_dashboard():
     st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
     st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
 
-# --- Login screen ---
+# --- Login screen (logo centered, correct flow) ---
 def login_screen():
-    st.markdown('<div class="center-logo"><img src="logo.png" alt="SDG 8 Logo"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
+    st.image("logo.png", width=260)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     st.markdown("<h3 style='text-align:center; color:#4e342e;'>Login Portal</h3>", unsafe_allow_html=True)
 
     user_type = st.selectbox("Select User Type:", ["Applicant", "Admin"])
     username = st.text_input("Username:")
     password = st.text_input("Password:", type="password")
 
-    if st.button("🔵 Login"):
-        if user_type == "Admin" and username == "admin" and password == "1234":
-            st.success("Welcome Admin!")
-            show_admin_dashboard()
-        elif user_type == "Applicant":
-            cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
-            row = cursor.fetchone()
-            if row:
-                if row[0] == password:
-                    st.success(f"Welcome {username}!")
-                    show_applicant_dashboard(username)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("🔵 Login"):
+            if user_type == "Admin" and username == "admin" and password == "1234":
+                st.success("Welcome Admin!")
+                show_admin_dashboard()
+            elif user_type == "Applicant":
+                cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
+                row = cursor.fetchone()
+                if row:
+                    if row[0] == password:
+                        st.success(f"Welcome {username}!")
+                        show_applicant_dashboard(username)
+                    else:
+                        st.error("Incorrect password.")
                 else:
-                    st.error("Incorrect password.")
-            else:
-                st.error("No account found. Please create an account first")
+                    st.error("No account found. Please create an account first.")
+    with col2:
+        if st.button("Create Account"):
+            create_account(username, password)
+    with col3:
+        if st.button("Back to Intro"):
+            st.session_state["stage"] = "intro"
+
+# --- Router ---
+if "stage" not in st.session_state:
+    st.session_state["stage"] = "intro"
+
+if st.session_state["stage"] == "intro":
+    intro_screen()
+elif st.session_state["stage"] == "login":
+    login_screen()
