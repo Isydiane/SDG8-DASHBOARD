@@ -80,11 +80,12 @@ def intro_screen():
         </p>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])  # center column wider
+    # --- Centered buttons ---
+    col1, col2, col3 = st.columns([1,2,1])  # middle column wider
     with col2:
-        if st.button("Click to Proceed to Login"):
+        if st.button("Click to Proceed to Login", use_container_width=True):
             st.session_state["stage"] = "login"
-        if st.button("Exit Application"):
+        if st.button("Exit Application", use_container_width=True):
             st.info("You may now close this tab.")
 
 
