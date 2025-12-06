@@ -4,24 +4,12 @@ import pandas as pd
 
 # --- Page config and global styles ---
 st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara", page_icon="📊", layout="centered")
-
 st.markdown("""
     <style>
     .stApp { background-color: #f5e6c4; }
     .center-logo {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 60px;
-        margin-bottom: 0px;
-    }
-    .center-logo img {
-        display: block;
-        margin: 0 auto;
-        width: 320px; /* adjust size as needed */
-    }
-    </style>
-""", unsafe_allow_html=True)
+        display: flex; justify-content: center; align-items: center;
+        margin-top: -0px; margin-bottom: 0px;
 
     }
     .title-text {
