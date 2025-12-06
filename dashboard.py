@@ -146,17 +146,28 @@ def show_admin_dashboard():
     st.dataframe(applicants, use_container_width=True)
 
 # --- Youth charts ---
-def show_youth_charts():
-    st.markdown('<h3 class="section-title">Youth Economic Charts</h3>', unsafe_allow_html=True)
-    st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
-    st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+ddef show_youth_charts():
+    st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
+    st.markdown('<h4 class="section-title">Youth Economic Indicators by Age Group</h4>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1,2,1])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Back to Login", use_container_width=True):
+        st.markdown("### Select a Chart to View")
+        if st.button("Unemployment Rate", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+        if st.button("Underemployment Rate", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+        if st.button("NEET Rate", use_container_width=True):
+            st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+        if st.button("Youth Wages", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+        if st.button("View Data Table", use_container_width=True):
+            st.table(df_base)
+
+        st.markdown("---")
+        if st.button("Logout / Back to Login", use_container_width=True):
             st.session_state["stage"] = "login"
+
 
 # --- Login screen ---
 def login_screen():
