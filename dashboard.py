@@ -190,7 +190,11 @@ def login_screen():
             if not username or not password:
                 st.error("Please enter a username and password.")
             else:
-                create_account(username, password)
+                  success = create_account(username, password)
+        if success:
+            st.success(f"Welcome {username}! Your account has been created.")
+            show_applicant_dashboard(username)
+
 
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
