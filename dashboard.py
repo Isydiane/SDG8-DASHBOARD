@@ -1,8 +1,5 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
 import pandas as pd
 import sqlite3
-from PIL import Image, ImageTk 
 import os 
 
 # Global variables for state management
