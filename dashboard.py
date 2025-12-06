@@ -227,3 +227,4 @@ def login_screen():
                 else:
                     st.error("Incorrect password.")
             else:
+                    st.error("No account found. Please create an account first.")
