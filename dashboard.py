@@ -104,16 +104,30 @@ def create_account(username: str, password: str):
         return False
 
 # --- Applicant dashboard ---
+# --- Applicant dashboard ---
 def show_applicant_dashboard(username: str):
-    st.markdown('<h3 class="section-title">Applicant Dashboard</h3>', unsafe_allow_html=True)
-    st.write("Submit your resume and view job opportunities and recommendations.")
+    ...
+    
+# --- Admin dashboard ---
+def show_admin_dashboard():
+    ...
 
-    st.markdown('<h4 class="section-title">View Youth Economic Charts</h4>', unsafe_allow_html=True)
-    if st.button("1", use_container_width=True):
-        st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
-        st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
-        st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
-        st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+# --- Youth charts (separate view) ---
+def show_youth_charts():
+    st.markdown('<h3 class="section-title">Youth Economic Charts</h3>', unsafe_allow_html=True)
+    st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+    st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+    st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+    st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("Back to Login", use_container_width=True):
+            st.session_state["stage"] = "login"
+
+# --- Login screen ---
+def login_screen():
+    ...
 
 
     full_name = st.text_input("Full Name")
