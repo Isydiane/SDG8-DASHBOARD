@@ -185,8 +185,12 @@ def login_screen():
                     else:
                         st.error("Incorrect password.")
 
+         # ✅ Create Account only triggers if both fields are filled
         if st.button("Create Account", use_container_width=True):
-            create_account(username, password)
+            if not username or not password:
+                st.error("Please enter a username and password.")
+            else:
+                create_account(username, password)
 
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
