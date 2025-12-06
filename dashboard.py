@@ -108,6 +108,14 @@ def show_applicant_dashboard(username: str):
     st.markdown('<h3 class="section-title">Applicant Dashboard</h3>', unsafe_allow_html=True)
     st.write("Submit your resume and view job opportunities and recommendations.")
 
+    st.markdown('<h4 class="section-title">View Youth Economic Charts</h4>', unsafe_allow_html=True)
+    if st.button("1", use_container_width=True):
+        st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+        st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+        st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+        st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+
+
     full_name = st.text_input("Full Name")
     age = st.number_input("Age", min_value=18, max_value=30, value=18)
     address = st.text_input("Address")
@@ -148,12 +156,6 @@ def show_admin_dashboard():
     except Exception:
         applicants = pd.DataFrame(columns=["id","full_name","age","age_group","address","skills","education","experience"])
     st.dataframe(applicants, use_container_width=True)
-
-    st.markdown('<h4 class="section-title">Youth Employment Charts</h4>', unsafe_allow_html=True)
-    st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
-    st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
-    st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
 
 def login_screen():
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
