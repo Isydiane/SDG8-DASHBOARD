@@ -10,18 +10,18 @@ st.markdown("""
     .stApp { background-color: #f5e6c4; }
     .center-logo {
         display: flex; justify-content: center; align-items: center;
-        margin-top: -20px; margin-bottom: 10px;
+        margin-top: -50px; margin-bottom: 10px;
     }
     .title-text {
-        font-size: 32px; font-weight: 700; text-align: center; color: #4e342e; margin: 6px 0;
+        font-size: 32px; font-weight: 1000; text-align: center; color: #4e342e; margin: 6px 0;
     }
     .subtitle-text {
-        font-size: 20px; text-align: center; color: #6d4c41; margin: 2px 0 10px 0;
+        font-size: 20px; text-align: center; color: #4e342e; margin: 2px 0 10px 0;
     }
     .description-text {
-        font-size: 16px; text-align: center; color: #5d4037; margin: 8px auto 22px auto; max-width: 800px; line-height: 1.5;
+        font-size: 16px; text-align: center; color: #4e342e; margin: 8px auto 22px auto; max-width: 800px; line-height: 1.5;
     }
-    .section-title { text-align: center; font-weight: 600; color: #4e342e; margin: 10px 0 18px 0; }
+    .section-title { text-align: center; font-weight: 600; color:#4e342e; margin: 10px 0 18px 0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,11 +68,11 @@ def get_age_group(age: int):
 # --- Intro screen (matches your design) ---
 def intro_screen():
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    st.image("logo.png", width=260)
+    st.image("logo.png", width=300)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<p class="title-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle-text">SDG 8: Decent Work and Economic Growth</p>', unsafe_allow_html=True)
+    st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
 
     st.markdown("""
         <p class="description-text">
@@ -83,10 +83,10 @@ def intro_screen():
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("✅ Click to Proceed to Login"):
+        if st.button("Click to Proceed to Login"):
             st.session_state["stage"] = "login"
     with col2:
-        if st.button("❌ Exit Application"):
+        if st.button("Exit Application"):
             st.info("You may now close this tab.")
 
 # --- Account creation (enforced before applicant login) ---
