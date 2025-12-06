@@ -25,14 +25,31 @@ if "proceed" not in st.session_state:
 
 # --- Intro Screen ---
 def intro_screen():
+    st.markdown("""
+        <style>
+        .stApp { background-color: #f5e6c4; }
+        .title-text {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            color: #4e342e;
+        }
+        .subtitle-text {
+            font-size: 20px;
+            text-align: center;
+            color: #6d4c41;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.image("logo.png", width=250)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.title("Supporting Youth Economic Data Dashboard – PESO Santa Barbara")
-    st.subheader("SDG 8: Decent Work and Economic Growth")
+    st.markdown("<p class='title-text'>Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle-text'>SDG 8: Decent Work and Economic Growth</p>", unsafe_allow_html=True)
 
-    st.markdown("""
+    st.write("""
     This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.  
     It focuses on protecting workers’ rights, supporting businesses, reducing unemployment, and ensuring equal opportunities for all.
     """)
@@ -41,13 +58,14 @@ def intro_screen():
     with col1:
         if st.button("✅ Click to Proceed to Login"):
             st.session_state["proceed"] = True
+            st.experimental_rerun()
     with col2:
-        st.button("❌ Exit Application")
+        if st.button("❌ Exit Application"):
+            st.warning("Thank you for visiting. You may now close the tab.")
 
 # --- Admin Dashboard ---
 def show_admin_dashboard():
     st.header("Admin Dashboard")
-
     applicants = pd.read_sql("SELECT * FROM applicants", conn)
 
     st.subheader("Filter Applicants")
@@ -68,10 +86,6 @@ def show_admin_dashboard():
     st.subheader("Export Data")
     csv = filtered.to_csv(index=False).encode("utf-8")
     st.download_button("📥 Download as CSV", data=csv, file_name="applicants_filtered.csv", mime="text/csv")
-
-    excel = filtered.to_excel("applicants_filtered.xlsx", index=False)
-    with open("applicants_filtered.xlsx", "rb") as f:
-        st.download_button("📥 Download as Excel", data=f, file_name="applicants_filtered.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     st.subheader("Youth Employment Charts")
     st.bar_chart(df.set_index("Age_Group")["Unemployment_Rate (%)"])
@@ -152,20 +166,28 @@ def main():
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
-    if st.button("Login"):
-        if user_type == "Admin" and username == "admin" and password == "1234":
-            st.success("Welcome Admin!")
-            show_admin_dashboard()
-        elif user_type == "Applicant":
-            cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username,))
-            result = cursor.fetchone()
-            if result and result[0] == password:
-                st.success(f"Welcome {username}!")
-                show_applicant_dashboard(username)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("🔵 Login"):
+            if user_type == "Admin" and username == "admin" and password == "1234":
+                st.success("Welcome Admin!")
+                show_admin_dashboard()
+            elif user_type == "Applicant":
+                cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username,))
+                result = cursor.fetchone()
+                if result and result[0] == password:
+                    st.success(f"Welcome {username}!")
+                    show_applicant_dashboard(username)
+                else:
+                    st.error("Invalid Applicant credentials")
             else:
-                st.error("Invalid Applicant credentials")
-        else:
-            st.error("Invalid login")
+                st.error("Invalid login")
+    with col2:
+        st.button("🟢 Create Account")
+    with col3:
+        if st.button("🔴 Back to Intro"):
+            st.session_state["proceed"] = False
+            st.experimental_rerun()
 
 # --- Run App ---
 if st.session_state["proceed"]:
