@@ -9,7 +9,7 @@ st.markdown("""
     .stApp { background-color: #f5e6c4; }
     .center-logo {
         display: flex; justify-content: center; align-items: center;
-        margin-top: 0px; margin-bottom: 0px; width: 50px;
+        margin-top: 0px; margin-bottom: 0px; width: 260px;
 
     }
     .title-text {
@@ -70,7 +70,7 @@ def intro_screen():
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
 
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    st.image("logo.png", width=320)
+    st.image("logo.png", width=260)
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
@@ -198,6 +198,7 @@ if st.session_state["stage"] == "intro":
     intro_screen()
 elif st.session_state["stage"] == "login":
     login_screen()
+
 
 
 
