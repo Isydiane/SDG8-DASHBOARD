@@ -169,7 +169,7 @@ def login_screen():
     # --- Applicant must have account first ---
     col1, col2, col3 = st.columns([1,2,1])
     with col2: 
-     if st.button("🔵 Login"):
+     if st.button("🔵 Login", use_container_width=True):
         if user_type == "Admin" and username == "admin" and password == "1234":
             st.success("Welcome Admin!")
             show_admin_dashboard()
@@ -184,6 +184,12 @@ def login_screen():
                     show_applicant_dashboard(username)
                 else:
                     st.error("Incorrect password.")
+
+    if st.button("Create Account", use_container_width=True):
+        create_account(username, password)
+
+    if st.button("Back to Intro", use_container_width=True):
+        st.session_state["stage"] = "intro"
 
     # --- Account creation always available ---
     if st.button("Create Account"):
