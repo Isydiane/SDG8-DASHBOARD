@@ -9,7 +9,7 @@ st.markdown("""
     .stApp { background-color: #f5e6c4; }
     .center-logo {
         display: flex; justify-content: center; align-items: center;
-        margin-top: 0px; margin-bottom: 0px; width: 200px;
+        margin-top: 0px; margin-bottom: 0px; width: 0px;
 
     }
     .title-text {
@@ -198,6 +198,7 @@ if st.session_state["stage"] == "intro":
     intro_screen()
 elif st.session_state["stage"] == "login":
     login_screen()
+
 
 
 
