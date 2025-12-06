@@ -193,7 +193,8 @@ def login_screen():
                 account_created = create_account(username, password)
                 if account_created:
                     st.success(f"Welcome {username}! Your account has been created.")
-                    show_applicant_dashboard(username)
+                    st.session_state["username"] = username
+                    st.session_state["stage"] = "dashboard"
 
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
