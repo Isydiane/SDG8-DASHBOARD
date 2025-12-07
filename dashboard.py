@@ -21,14 +21,27 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Page background */
-    .stApp { background-color: #f5e6c4; }
+/* REMOVE STREAMLIT TOP PADDING COMPLETELY */
+.block-container {
+    padding-top: 0 !important;
+    margin-top: -40px !important;
+}
 
-    /* Logo container */
-    .center-logo {
-        display: flex; justify-content: center; align-items: center;
-        margin-top: 0px; margin-bottom: 0px; width: 60px;
-    }
+/* PERFECT CENTER LOGO CONTAINER */
+.center-logo {
+    display: flex;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100%;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+/* OPTIONAL: Reduce extra top spacing on login screen */
+.login-top-space {
+    margin-top: -60px !important;
+}
+</style>
 
     /* Titles & readability */
     .title-text {
@@ -735,4 +748,3 @@ elif stage == "admin_panel":
 
 elif stage == "charts":
     show_youth_charts()
-
