@@ -101,26 +101,28 @@ def create_account(username: str, password: str):
 
 # --- Applicant dashboard ---
 def show_applicant_dashboard(username: str):
-    st.markdown('<h3 class="section-title">Applicant Dashboard</h3>', unsafe_allow_html=True)
-    st.write("Submit your resume and view job opportunities and recommendations.")
+    st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
+    st.markdown('<h4 class="section-title">Applicant Dashboard</h4>', unsafe_allow_html=True)
 
-    full_name = st.text_input("Full Name")
-    age = st.number_input("Age", min_value=18, max_value=30, value=18)
-    address = st.text_input("Address")
-    skills = st.text_input("Skills (comma separated)")
-    education = st.text_input("Education")
-    experience = st.number_input("Work Experience (years)", min_value=0, value=0)
+    st.markdown("#### Submit Your Resume")
+    with st.form("resume_form"):
+        full_name = st.text_input("Full Name")
+        age = st.number_input("Age", min_value=18, max_value=30, value=18)
+        address = st.text_input("Address")
+        skills = st.text_input("Skills (comma separated)")
+        education = st.text_input("Education")
+        experience = st.number_input("Work Experience (years)", min_value=0, value=0)
+        submitted = st.form_submit_button("Submit Resume")
+        if submitted:
+            age_group = get_age_group(int(age))
+            cursor.execute("""
+                INSERT INTO applicants (full_name, age, age_group, address, skills, education, experience)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (full_name.strip(), int(age), age_group, address.strip(), skills.strip(), education.strip(), int(experience)))
+            conn.commit()
+            st.success("Resume submitted successfully!")
 
-    if st.button("Submit Resume"):
-        age_group = get_age_group(int(age))
-        cursor.execute("""
-            INSERT INTO applicants (full_name, age, age_group, address, skills, education, experience)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (full_name.strip(), int(age), age_group, address.strip(), skills.strip(), education.strip(), int(experience)))
-        conn.commit()
-        st.success("Resume submitted successfully!")
-
-    st.markdown('<h4 class="section-title">Job Opportunities</h4>', unsafe_allow_html=True)
+    st.markdown("#### Job Opportunities")
     JOB_LIST = [
         ("Cashier (Local Store)", 12000),
         ("Service Crew", 10000),
@@ -136,6 +138,15 @@ def show_applicant_dashboard(username: str):
     jobs_df = pd.DataFrame(JOB_LIST, columns=["Job Title", "Monthly Salary"])
     st.table(jobs_df)
 
+    st.markdown("---")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("View Youth Charts", use_container_width=True):
+            st.session_state["stage"] = "charts"
+    with col2:
+        if st.button("Logout / Back to Login", use_container_width=True):
+            st.session_state["stage"] = "login"
+
 # --- Admin dashboard ---
 def show_admin_dashboard():
     st.markdown('<h3 class="section-title">Admin Dashboard</h3>', unsafe_allow_html=True)
@@ -146,9 +157,43 @@ def show_admin_dashboard():
     st.dataframe(applicants, use_container_width=True)
 
 # --- Youth charts ---
-def show_youth_charts():
+def show_admin_dashboard():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
-    st.markdown('<h4 class="section-title">Youth Economic Indicators by Age Group</h4>', unsafe_allow_html=True)
+    st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
+
+    try:
+        applicants = pd.read_sql("SELECT * FROM applicants", conn)
+    except Exception:
+        applicants = pd.DataFrame(columns=["id","full_name","age","age_group","address","skills","education","experience"])
+
+    if not applicants.empty:
+        edited_df = st.data_editor(
+            applicants,
+            num_rows="dynamic",
+            use_container_width=True,
+            column_config={"id": st.column_config.NumberColumn("ID", disabled=True)},
+            hide_index=True
+        )
+
+        selected_ids = edited_df["id"].tolist()
+
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("Delete Selected Applicant (Increases Rates)", use_container_width=True):
+                if selected_ids:
+                    cursor.executemany("DELETE FROM applicants WHERE id=?", [(i,) for i in selected_ids])
+                    conn.commit()
+                    st.success("Selected applicants deleted.")
+                    st.rerun()
+                else:
+                    st.warning("No applicants selected.")
+        with col2:
+            if st.button("Back to Dashboard", use_container_width=True):
+                st.session_state["stage"] = "charts"
+    else:
+        st.info("No applicants found in the database.")
+        if st.button("Back to Dashboard", use_container_width=True):
+            st.session_state["stage"] = "charts"
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
