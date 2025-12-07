@@ -679,7 +679,7 @@ def show_youth_charts():
 # ---------------------------
 def login_screen():
     st.markdown('<div class="center-logo login-top-space">', unsafe_allow_html=True)
-    st.image("logo.png", width=280)
+    st.image("logo.png", width=250)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; color:#4e342e;'>Login Portal</h3>", unsafe_allow_html=True)
 
@@ -748,3 +748,4 @@ elif stage == "admin_panel":
 
 elif stage == "charts":
     show_youth_charts()
+
