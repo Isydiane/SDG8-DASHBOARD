@@ -27,7 +27,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Database setup ---
-conn = sqlite3.connect("applicants.db")
+conn = sqlite3.connect("applicants.db", check_same_thread=False)
 cursor = conn.cursor()
 
 cursor.execute("""
@@ -157,66 +157,90 @@ def show_admin_dashboard():
         applicants = pd.DataFrame(columns=["id","full_name","age","age_group","address","skills","education","experience"])
     st.dataframe(applicants, use_container_width=True)
 
-# --- Youth charts (IMPROVED & FIXED) ---
+# --- Youth charts (IMPROVED & CLICKABLE + COLORED) ---
 def show_youth_charts():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Youth Economic Charts</h4>', unsafe_allow_html=True)
 
     df = df_base.copy()
 
-    st.markdown("### Select a Chart to View")
+    st.markdown("### 📊 Select a Chart to View")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    chart_choice = st.radio(
+        "",
+        [
+            "Unemployment Rate",
+            "Underemployment Rate",
+            "NEET Rate",
+            "Average Youth Wages",
+            "View Data Table"
+        ],
+        index=0,
+        label_visibility="collapsed"
+    )
 
-    with col2:
-        # UNEMPLOYMENT CHART
-        if st.button("Unemployment Rate", use_container_width=True):
-            fig = px.bar(
-                df, x="Age_Group", y="Unemployment_Rate (%)",
-                text="Unemployment_Rate (%)", title="Unemployment Rate by Age Group"
-            )
-            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
-            fig.update_traces(textposition="outside")
-            st.plotly_chart(fig, use_container_width=True)
+    # Display charts with clear colors and readable text
+    if chart_choice == "Unemployment Rate":
+        fig = px.bar(
+            df,
+            x="Age_Group",
+            y="Unemployment_Rate (%)",
+            title="Unemployment Rate by Age Group",
+            text="Unemployment_Rate (%)",
+            color_discrete_sequence=["#1f77b4"]   # Blue
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(title_x=0.5, font=dict(size=16, color="#2d2d2d"), yaxis_title="Rate (%)")
+        st.plotly_chart(fig, use_container_width=True)
 
-        # UNDEREMPLOYMENT CHART
-        if st.button("Underemployment Rate", use_container_width=True):
-            fig = px.bar(
-                df, x="Age_Group", y="Underemployment_Rate (%)",
-                text="Underemployment_Rate (%)", title="Underemployment Rate by Age Group"
-            )
-            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
-            fig.update_traces(textposition="outside")
-            st.plotly_chart(fig, use_container_width=True)
+    elif chart_choice == "Underemployment Rate":
+        fig = px.bar(
+            df,
+            x="Age_Group",
+            y="Underemployment_Rate (%)",
+            title="Underemployment Rate by Age Group",
+            text="Underemployment_Rate (%)",
+            color_discrete_sequence=["#2ca02c"]   # Green
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(title_x=0.5, font=dict(size=16, color="#2d2d2d"), yaxis_title="Rate (%)")
+        st.plotly_chart(fig, use_container_width=True)
 
-        # NEET RATE CHART
-        if st.button("NEET Rate", use_container_width=True):
-            fig = px.line(
-                df, x="Age_Group", y="NEET_Rate (%)",
-                markers=True, title="NEET Rate by Age Group"
-            )
-            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
-            st.plotly_chart(fig, use_container_width=True)
+    elif chart_choice == "NEET Rate":
+        fig = px.line(
+            df,
+            x="Age_Group",
+            y="NEET_Rate (%)",
+            markers=True,
+            title="NEET Rate by Age Group",
+            color_discrete_sequence=["#ff7f0e"]   # Orange
+        )
+        fig.update_layout(title_x=0.5, font=dict(size=16, color="#2d2d2d"), yaxis_title="Rate (%)")
+        st.plotly_chart(fig, use_container_width=True)
 
-        # WAGES CHART
-        if st.button("Youth Wages", use_container_width=True):
-            fig = px.bar(
-                df, x="Age_Group", y="Average_Monthly_Wage (PHP)",
-                text="Average_Monthly_Wage (PHP)", title="Average Monthly Wage by Age Group"
-            )
-            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
-            fig.update_traces(textposition="outside")
-            st.plotly_chart(fig, use_container_width=True)
+    elif chart_choice == "Average Youth Wages":
+        fig = px.bar(
+            df,
+            x="Age_Group",
+            y="Average_Monthly_Wage (PHP)",
+            title="Average Monthly Wage by Age Group (PHP)",
+            text="Average_Monthly_Wage (PHP)",
+            color_discrete_sequence=["#9467bd"]   # Purple
+        )
+        fig.update_traces(textposition="outside")
+        fig.update_layout(title_x=0.5, font=dict(size=16, color="#2d2d2d"), yaxis_title="Monthly Wage (PHP)")
+        st.plotly_chart(fig, use_container_width=True)
 
-        # DATA TABLE
-        if st.button("View Data Table", use_container_width=True):
-            st.dataframe(df, use_container_width=True)
+    elif chart_choice == "View Data Table":
+        st.dataframe(df, use_container_width=True)
 
-        st.markdown("---")
+    st.markdown("---")
 
-        if st.button("Back to Applicant Dashboard", use_container_width=True):
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("⬅ Back to Applicant Dashboard", use_container_width=True):
             st.session_state["stage"] = "dashboard"
-
+    with col2:
         if st.button("Logout / Back to Login", use_container_width=True):
             st.session_state["stage"] = "login"
 
@@ -315,7 +339,9 @@ if st.session_state["stage"] == "intro":
 elif st.session_state["stage"] == "login":
     login_screen()
 elif st.session_state["stage"] == "dashboard":
-    show_applicant_dashboard(st.session_state["username"])
+    # safe access to username key (defaults to Guest if not present)
+    username = st.session_state.get("username", "Guest")
+    show_applicant_dashboard(username)
 elif st.session_state["stage"] == "admin":
     show_admin_dashboard()
 elif st.session_state["stage"] == "admin_panel":
