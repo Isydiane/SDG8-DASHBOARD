@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import plotly.express as px   # <-- added
 
 # --- Page config and global styles ---
 st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara", page_icon="📊", layout="centered")
@@ -156,32 +157,70 @@ def show_admin_dashboard():
         applicants = pd.DataFrame(columns=["id","full_name","age","age_group","address","skills","education","experience"])
     st.dataframe(applicants, use_container_width=True)
 
-# --- Youth charts ---
+# --- Youth charts (IMPROVED & FIXED) ---
 def show_youth_charts():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Youth Economic Charts</h4>', unsafe_allow_html=True)
 
+    df = df_base.copy()
+
+    st.markdown("### Select a Chart to View")
+
     col1, col2, col3 = st.columns([1, 2, 1])
+
     with col2:
-        st.markdown("### Select a Chart to View")
+        # UNEMPLOYMENT CHART
         if st.button("Unemployment Rate", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+            fig = px.bar(
+                df, x="Age_Group", y="Unemployment_Rate (%)",
+                text="Unemployment_Rate (%)", title="Unemployment Rate by Age Group"
+            )
+            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
+            fig.update_traces(textposition="outside")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # UNDEREMPLOYMENT CHART
         if st.button("Underemployment Rate", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+            fig = px.bar(
+                df, x="Age_Group", y="Underemployment_Rate (%)",
+                text="Underemployment_Rate (%)", title="Underemployment Rate by Age Group"
+            )
+            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
+            fig.update_traces(textposition="outside")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # NEET RATE CHART
         if st.button("NEET Rate", use_container_width=True):
-            st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+            fig = px.line(
+                df, x="Age_Group", y="NEET_Rate (%)",
+                markers=True, title="NEET Rate by Age Group"
+            )
+            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
+            st.plotly_chart(fig, use_container_width=True)
+
+        # WAGES CHART
         if st.button("Youth Wages", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+            fig = px.bar(
+                df, x="Age_Group", y="Average_Monthly_Wage (PHP)",
+                text="Average_Monthly_Wage (PHP)", title="Average Monthly Wage by Age Group"
+            )
+            fig.update_layout(title_font_size=24, font=dict(size=16, color="#2d2d2d"))
+            fig.update_traces(textposition="outside")
+            st.plotly_chart(fig, use_container_width=True)
+
+        # DATA TABLE
         if st.button("View Data Table", use_container_width=True):
-            st.table(df_base)
+            st.dataframe(df, use_container_width=True)
 
         st.markdown("---")
+
         if st.button("Back to Applicant Dashboard", use_container_width=True):
             st.session_state["stage"] = "dashboard"
+
         if st.button("Logout / Back to Login", use_container_width=True):
             st.session_state["stage"] = "login"
 
-# --- Admin panel with editing and charts ---
+# --- Admin panel ---
 def show_admin_panel():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
@@ -204,7 +243,7 @@ def show_admin_panel():
 
         col1, col2 = st.columns([1, 1])
         with col1:
-            if st.button("Delete Selected Applicant (Increases Rates)", use_container_width=True):
+            if st.button("Delete Selected Applicant", use_container_width=True):
                 if selected_ids:
                     cursor.executemany("DELETE FROM applicants WHERE id=?", [(i,) for i in selected_ids])
                     conn.commit()
@@ -245,7 +284,7 @@ def login_screen():
                 cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
                 row = cursor.fetchone()
                 if row is None:
-                    st.error("No account found. Please create an account first before logging in.")
+                    st.error("No account found. Please create an account first.")
                 else:
                     if row[0] == password:
                         st.success(f"Welcome {username}!")
@@ -263,9 +302,6 @@ def login_screen():
                     st.success(f"Welcome {username}! Your account has been created.")
                     st.session_state["username"] = username
                     st.session_state["stage"] = "dashboard"
-
-        if st.button("View Youth Charts", use_container_width=True):
-            st.session_state["stage"] = "charts"
 
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
