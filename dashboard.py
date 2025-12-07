@@ -20,49 +20,39 @@ st.set_page_config(
 
 st.markdown(
     """
+    st.markdown(
+    """
     <style>
-    /* Remove Streamlit's default top padding for perfect vertical alignment */
-    .block-container {
-        padding-top: 0 !important;
-        margin-top: -40px !important;
-    }
-
     /* Page background */
     .stApp { background-color: #f5e6c4; }
 
-    /* Center the logo perfectly */
+    /* Logo container – CENTERED ON ALL DEVICES */
     .center-logo {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        width: 100% !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 60px;
+        margin-left: auto;
+        margin-right: auto;
     }
-
-    /* Optional: Reduce extra spacing above login page logo */
-    .login-top-space {
-        margin-top: -20px !important;
-    }
-
 
     /* Titles & readability */
     .title-text {
         font-size: 36px !important;
         font-weight: 900 !important;
-        text-align: center;
+        text-align: center !important;
         color: #2f2f2f !important;
         margin: 6px 0 8px 0;
     }
     .subtitle-text {
         font-size: 20px !important;
-        text-align: center;
+        text-align: center !important;
         color: #3b3b3b !important;
         margin: 2px 0 16px 0;
     }
     .description-text {
         font-size: 16px !important;
-        text-align: center;
+        text-align: center !important;
         color: #4e342e !important;
         margin: 8px auto 22px auto;
         max-width: 900px;
@@ -85,13 +75,13 @@ st.markdown(
         margin: 0px !important;
     }
 
-    /* Make search input larger and more readable */
+    /* Search input readability */
     input[type="text"] {
         font-size: 18px !important;
         padding: 12px !important;
     }
 
-    /* Global button styling to be dark rounded (applies to Streamlit buttons) */
+    /* Button styling */
     .stButton>button {
         background-color: #111214 !important;
         color: #ffffff !important;
@@ -104,7 +94,7 @@ st.markdown(
         transform: translateY(-1px);
     }
 
-    /* Job "chip" look when we display them as buttons */
+    /* Job tags */
     .job-chip {
         display:inline-block;
         padding:10px 16px;
@@ -122,10 +112,52 @@ st.markdown(
         color: #2b2b2b !important;
     }
 
+    /* ----------------------------------
+       MOBILE RESPONSIVE FIX – CENTER ALL
+       ---------------------------------- */
+    @media (max-width: 600px) {
+
+        /* Center main container */
+        .block-container {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            margin: 0 auto !important;
+            text-align: center !important;
+        }
+
+        /* Center & full-width widgets */
+        .stTextInput, .stNumberInput, .stTextArea, .stFileUploader,
+        .stSelectbox, .stRadio, .stButton > button {
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        /* Force columns to stack */
+        .css-1kyxreq, .css-1r6slb0, .css-12oz5g7, .css-1r6slb0 {
+            flex-direction: column !important;
+            width: 100% !important;
+        }
+
+        /* Center all images */
+        img {
+            display: block !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        /* Extra padding for readability */
+        .center-logo, .title-text, .subtitle-text, .description-text {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
 )
+
 
 # ---------------------------
 # Database setup
@@ -748,4 +780,3 @@ elif stage == "admin_panel":
 
 elif stage == "charts":
     show_youth_charts()
-
