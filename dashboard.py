@@ -13,7 +13,7 @@ import io
 # Config & styles
 # ---------------------------
 st.set_page_config(
-    page_title="Supporting Youth Economic Data Dashboard – PESO Santa Barbara",
+    page_title="SDG 8: DECENT WORK AND ECEONOMIC GROWTH",
     page_icon="📊",
     layout="centered",
 )
@@ -735,3 +735,4 @@ elif stage == "admin_panel":
 
 elif stage == "charts":
     show_youth_charts()
+
