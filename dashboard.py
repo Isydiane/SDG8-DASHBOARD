@@ -21,27 +21,30 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-/* REMOVE STREAMLIT TOP PADDING COMPLETELY */
-.block-container {
-    padding-top: 0 !important;
-    margin-top: -40px !important;
-}
+    /* Remove Streamlit's default top padding for perfect vertical alignment */
+    .block-container {
+        padding-top: 0 !important;
+        margin-top: -40px !important;
+    }
 
-/* PERFECT CENTER LOGO CONTAINER */
-.center-logo {
-    display: flex;
-    justify-content: center !important;
-    align-items: center !important;
-    width: 100%;
-    margin: 0 auto !important;
-    padding: 0 !important;
-}
+    /* Page background */
+    .stApp { background-color: #f5e6c4; }
 
-/* OPTIONAL: Reduce extra top spacing on login screen */
-.login-top-space {
-    margin-top: -60px !important;
-}
-</style>
+    /* Center the logo perfectly */
+    .center-logo {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+    }
+
+    /* Optional: Reduce extra spacing above login page logo */
+    .login-top-space {
+        margin-top: -20px !important;
+    }
+
 
     /* Titles & readability */
     .title-text {
@@ -675,11 +678,8 @@ def show_youth_charts():
 # Login screen
 # ---------------------------
 def login_screen():
-    st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    try:
-        st.image("logo.png", width=260)
-    except Exception:
-        pass
+    st.markdown('<div class="center-logo login-top-space">', unsafe_allow_html=True)
+    st.image("logo.png", width=280)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align:center; color:#4e342e;'>Login Portal</h3>", unsafe_allow_html=True)
 
