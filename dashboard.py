@@ -656,7 +656,7 @@ def login_screen():
 
 
 # ---------------------------
-# Router (fixed)
+# Router (FINAL FIXED VERSION)
 # ---------------------------
 if "stage" not in st.session_state:
     st.session_state["stage"] = "intro"
@@ -665,12 +665,20 @@ stage = st.session_state["stage"]
 
 if stage == "intro":
     intro_screen()
+
 elif stage == "login":
     login_screen()
+
 elif stage == "dashboard":
     username = st.session_state.get("username", "Guest")
     show_applicant_dashboard(username)
-elif stage == "admin_panel":  # single consistent admin stage
-    show_admin_panel()
+
+elif stage == "admin_panel":
+    # ensure admin always loads fresh table
+    try:
+        show_admin_panel()
+    except st.errors.StreamlitAPIException:
+        st.experimental_rerun()
+
 elif stage == "charts":
     show_youth_charts()
