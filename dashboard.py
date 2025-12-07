@@ -14,27 +14,91 @@ st.set_page_config(page_title="Supporting Youth Economic Data Dashboard – PESO
 
 st.markdown("""
     <style>
+    /* Page background */
     .stApp { background-color: #f5e6c4; }
+
+    /* Logo container */
     .center-logo {
         display: flex; justify-content: center; align-items: center;
         margin-top: 0px; margin-bottom: 0px; width: 60px;
     }
+
+    /* Titles & readability */
     .title-text {
-        font-size: 32px; font-weight: 1000; text-align: center; color: #4e342e; margin: 6px 0;
+        font-size: 36px !important;
+        font-weight: 900 !important;
+        text-align: center;
+        color: #2f2f2f !important;
+        margin: 6px 0 8px 0;
     }
     .subtitle-text {
-        font-size: 20px; text-align: center; color: #4e342e; margin: 2px 0 10px 0;
+        font-size: 20px !important;
+        text-align: center;
+        color: #3b3b3b !important;
+        margin: 2px 0 16px 0;
     }
     .description-text {
-        font-size: 16px; text-align: center; color: #4e342e; margin: 8px auto 22px auto; max-width: 800px; line-height: 1.5;
+        font-size: 16px !important;
+        text-align: center;
+        color: #4e342e !important;
+        margin: 8px auto 22px auto;
+        max-width: 900px;
+        line-height: 1.5;
     }
-    .section-title { text-align: center; font-weight: 600; color:#4e342e; margin: 10px 0 18px 0; }
+    .section-title {
+        text-align: left !important;
+        font-weight: 800 !important;
+        color:#2d2d2d !important;
+        margin: 18px 0 12px 0 !important;
+        font-size: 22px !important;
+    }
+
+    /* Remove white card backgrounds previously used */
     .card {
-        background-color: rgba(255,255,255,0.85);
-        border-radius: 10px;
-        padding: 18px;
-        margin: 10px auto;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0px !important;
+        margin: 0px !important;
     }
+
+    /* Make search input larger and more readable */
+    input[type="text"] {
+        font-size: 18px !important;
+        padding: 12px !important;
+    }
+
+    /* Global button styling to be dark rounded (applies to Streamlit buttons) */
+    .stButton>button {
+        background-color: #111214 !important;
+        color: #ffffff !important;
+        border-radius: 12px !important;
+        padding: 10px 18px !important;
+        font-size: 16px !important;
+        border: 0px !important;
+    }
+    .stButton>button:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Job "chip" look when we display them as buttons */
+    .job-chip {
+        display:inline-block;
+        padding:10px 16px;
+        margin:8px 8px 8px 0;
+        border-radius:14px;
+        background:#1f1f1f;
+        color:#fff;
+        font-weight:600;
+        font-size:15px;
+    }
+
+    /* Table text improvements */
+    .stDataFrame table td, .stDataFrame table th {
+        font-size: 14px !important;
+        color: #2b2b2b !important;
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -48,7 +112,6 @@ os.makedirs(PHOTO_DIR, exist_ok=True)
 conn = sqlite3.connect(DB, check_same_thread=False)
 cursor = conn.cursor()
 
-# keep applicant_credentials as before
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS applicant_credentials (
     username TEXT PRIMARY KEY,
@@ -56,7 +119,6 @@ CREATE TABLE IF NOT EXISTS applicant_credentials (
 )
 """)
 
-# create applicants table with job_applied and photo_path columns included
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS applicants (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -73,7 +135,6 @@ CREATE TABLE IF NOT EXISTS applicants (
 """)
 conn.commit()
 
-# Helper to ensure columns exist (in case older DB didn't have them)
 def ensure_column(table, column, col_def):
     cursor.execute(f"PRAGMA table_info({table})")
     cols = [r[1] for r in cursor.fetchall()]
@@ -81,7 +142,6 @@ def ensure_column(table, column, col_def):
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}")
         conn.commit()
 
-# ensure optional columns (defensive)
 ensure_column("applicants", "job_applied", "TEXT")
 ensure_column("applicants", "photo_path", "TEXT")
 
@@ -104,7 +164,6 @@ def get_age_group(age: int):
     return None
 
 def save_photo(uploaded_file):
-    """Save uploaded file to photos directory and return relative path."""
     if uploaded_file is None:
         return None
     ext = uploaded_file.name.split(".")[-1]
@@ -121,15 +180,14 @@ def intro_screen():
     st.markdown('<p class="title-text">SDG 8: DECENT WORK AND ECONOMIC GROWTH</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle-text">Supporting Youth Economic Data Dashboard – PESO Santa Barbara</p>', unsafe_allow_html=True)
     st.markdown('<div class="center-logo">', unsafe_allow_html=True)
-    # logo.png must be present in app folder
     try:
         st.image("logo.png", width=320)
     except Exception:
-        st.write("")  # ignore if logo missing
+        pass
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("""
         <p class="description-text">
-        This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.<br>
+        This aims to create safe, fair, and productive jobs for everyone while helping economies grow sustainably.
         It focuses on protecting workers’ rights, supporting businesses, reducing unemployment, and ensuring equal opportunities for all.
         </p>
     """, unsafe_allow_html=True)
@@ -157,7 +215,7 @@ def create_account(username: str, password: str):
         return False
 
 # ---------------------------
-# Jobs: searchable & clickable
+# Jobs: searchable & clickable (more jobs)
 # ---------------------------
 JOB_LIST_SIMPLE = [
     "Cashier (Local Store)",
@@ -170,14 +228,27 @@ JOB_LIST_SIMPLE = [
     "Municipal Office Clerk",
     "Call Center Trainee (Iloilo City)",
     "IT Assistant Intern",
+    "Barista",
+    "Sales Associate",
+    "Receptionist",
+    "Security Guard",
+    "Warehouse Forklift Operator",
+    "Machine Operator",
+    "Housekeeping Staff",
+    "Driver (Delivery)",
+    "Inventory Clerk",
+    "Customer Service Representative",
+    "Computer Operator",
+    "Field Enumerator"
 ]
 
 def job_selection_ui():
-    st.markdown("<div class='card'><h4 style='text-align:center;color:#4e342e;'>Find a Job</h4></div>", unsafe_allow_html=True)
-    search = st.text_input("🔍 Search job...", key="job_search")
+    # no white card around header now
+    st.markdown("<h4 style='color:#2d2d2d; margin-bottom:4px;'>Find a Job</h4>", unsafe_allow_html=True)
+    search = st.text_input("🔍 Search job...", key="job_search", placeholder="Type job title to filter")
     filtered = [j for j in JOB_LIST_SIMPLE if search.lower() in j.lower()] if search else JOB_LIST_SIMPLE.copy()
 
-    # present clickable job cards in grid of 3
+    # present clickable job buttons in rows (3 columns)
     st.write("")  # spacing
     cols = st.columns(3)
     selected_job = None
@@ -185,24 +256,26 @@ def job_selection_ui():
         with cols[i % 3]:
             if st.button(job, key=f"job_{i}"):
                 selected_job = job
-    # also allow recall of previously selected job in session
+
+    # save/recall in session
     if selected_job:
         st.session_state["selected_job"] = selected_job
 
     selected_job = st.session_state.get("selected_job", None)
     if selected_job:
         st.success(f"Selected job: {selected_job}")
+
     return selected_job
 
 # ---------------------------
-# Applicant Dashboard (reworked)
+# Applicant Dashboard
 # ---------------------------
 def show_applicant_dashboard(username: str):
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Applicant Dashboard</h4>', unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### 1) Select a Job (required)")
+    st.markdown("### 1) Select a Job (required)", unsafe_allow_html=True)
     selected_job = job_selection_ui()
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -211,12 +284,12 @@ def show_applicant_dashboard(username: str):
         return
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.markdown("### 2) Resume Submission (choose one option)")
+    st.markdown("### 2) Resume Submission (choose one option)", unsafe_allow_html=True)
     option = st.radio("", ["I have a resume picture (upload only)", "I don't have a resume picture (fill the form)"], index=0)
 
-    # Option A: upload resume picture only (no form required)
+    # Option A: upload resume picture only
     if option.startswith("I have"):
-        st.write("Upload a photo of your resume (or a scanned copy). If you already have a resume, you don't need to fill the form.")
+        st.write("Upload a photo (scan) of your resume. If you already have one, you don't need to fill the form.")
         uploaded = st.file_uploader("Upload resume picture (jpg/png)", type=["jpg","jpeg","png"], key="resume_upload")
         if st.button("Submit Resume (upload only)"):
             if uploaded is None:
@@ -229,13 +302,12 @@ def show_applicant_dashboard(username: str):
                 """, ("N/A", 0, None, "N/A", "N/A", "N/A", 0, selected_job, path))
                 conn.commit()
                 st.success("Resume (image) submitted successfully! You may log out or apply for another job.")
-                # clear selected job
                 if "selected_job" in st.session_state:
                     del st.session_state["selected_job"]
 
     # Option B: fill the form, optional photo upload
     else:
-        st.write("Fill the applicant form below. You may optionally upload a 1×1 picture.")
+        st.write("Fill the form below. Optionally upload a 1×1 photo.")
         with st.form("applicant_form", clear_on_submit=False):
             full_name = st.text_input("Full Name", key="form_name")
             age = st.number_input("Age", min_value=15, max_value=60, step=1, key="form_age")
@@ -270,7 +342,6 @@ def show_applicant_dashboard(username: str):
             st.session_state["stage"] = "charts"
     with col2:
         if st.button("Logout / Back to Login", use_container_width=True):
-            # clear session keys used
             for k in ["username", "selected_job", "job_search"]:
                 if k in st.session_state: del st.session_state[k]
             st.session_state["stage"] = "login"
@@ -282,7 +353,6 @@ def show_admin_panel():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
 
-    # read applicants
     try:
         applicants = pd.read_sql("SELECT * FROM applicants", conn)
     except Exception:
@@ -291,10 +361,8 @@ def show_admin_panel():
     if applicants.empty:
         st.info("No applicants found in the database.")
     else:
-        # show a simple table
         st.dataframe(applicants[["id","full_name","job_applied","photo_path"]].rename(columns={"job_applied":"Job Applied","photo_path":"Photo Path"}), use_container_width=True)
 
-        # choose applicant id to view
         applicant_ids = applicants["id"].tolist()
         chosen = st.selectbox("Select Applicant ID to view details", options=applicant_ids)
 
@@ -314,10 +382,7 @@ def show_admin_panel():
             else:
                 st.warning("No photo available for this applicant.")
 
-        # admin delete selected
         if st.button("Delete selected applicant"):
-            chosen_id = st.session_state.get("admin_selected_delete", None)
-            # provide a simple deletion flow using chosen selectbox value
             if chosen:
                 cursor.execute("DELETE FROM applicants WHERE id=?", (int(chosen),))
                 conn.commit()
@@ -329,7 +394,7 @@ def show_admin_panel():
         st.session_state["stage"] = "login"
 
 # ---------------------------
-# Youth charts (unchanged)
+# Youth charts
 # ---------------------------
 def show_youth_charts():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
@@ -407,7 +472,6 @@ def show_youth_charts():
         st.dataframe(df, use_container_width=True)
 
     st.markdown("---")
-
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("⬅ Back to Applicant Dashboard", use_container_width=True):
@@ -478,7 +542,7 @@ elif st.session_state["stage"] == "dashboard":
     username = st.session_state.get("username", "Guest")
     show_applicant_dashboard(username)
 elif st.session_state["stage"] == "admin":
-    show_admin_dashboard()
+    show_admin_panel()
 elif st.session_state["stage"] == "admin_panel":
     show_admin_panel()
 elif st.session_state["stage"] == "charts":
