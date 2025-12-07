@@ -436,21 +436,42 @@ def show_admin_panel():
     conn = sqlite3.connect("applicants.db")
     df = pd.read_sql_query("SELECT * FROM applicants", conn)
 
-    # FIX 1: avoid KeyError by checking which columns exist
-    expected_columns = ["id", "full_name", "job_applied", "photo_path", "resume_path"]
-    for col in expected_columns:
+    # Ensure required columns exist
+    required_cols = ["id", "full_name", "job_applied", "photo_path", "resume_path"]
+    for col in required_cols:
         if col not in df.columns:
             df[col] = None
+
+    # -----------------------------
+    # YOUTH EMPLOYMENT GRAPH
+    # -----------------------------
+    st.subheader("Youth Job Application Graph")
+
+    job_counts = (
+        df["job_applied"]
+        .dropna()
+        .replace("", None)
+        .dropna()
+        .value_counts()
+        .sort_index()
+    )
+
+    if len(job_counts) == 0:
+        st.info("No job applications yet.")
+    else:
+        st.bar_chart(job_counts)
+
+    st.markdown("---")
 
     # -----------------------------
     # FILTERS
     # -----------------------------
     st.subheader("Filters")
 
-    # FIX 2: If job_applied column is empty → no crash
-    job_list = ["All"] + sorted([j for j in df["job_applied"].dropna().unique() if j.strip() != ""])
+    job_list = ["All"] + sorted(
+        [j for j in df["job_applied"].dropna().unique() if j.strip() != ""]
+    )
     job_filter = st.selectbox("Filter by job applied:", job_list)
-
     name_filter = st.text_input("Search applicant name:")
 
     filtered = df.copy()
@@ -463,22 +484,23 @@ def show_admin_panel():
 
     st.write(f"Showing **{len(filtered)}** applicants")
 
-    # -----------------------------
-    # DISPLAY APPLICANTS TABLE
-    # -----------------------------
     st.dataframe(
         filtered[["id", "full_name", "job_applied", "photo_path", "resume_path"]],
         use_container_width=True
     )
 
     # -----------------------------
-    # VIEW SELECTED APPLICANT
+    # VIEW & DELETE APPLICANT
     # -----------------------------
     st.subheader("View Applicant Details")
 
+    if len(filtered) == 0:
+        st.info("No applicants to view.")
+        return
+
     selected_id = st.selectbox(
         "Select Applicant ID:",
-        filtered["id"].tolist() if len(filtered) > 0 else []
+        filtered["id"].tolist()
     )
 
     if selected_id:
@@ -487,13 +509,13 @@ def show_admin_panel():
         st.write(f"### {person['full_name']}")
         st.write(f"**Job Applied:** {person['job_applied']}")
 
-        # FIX 3: Admin sees uploaded picture
+        # Show applicant photo
         if person["photo_path"] and os.path.exists(person["photo_path"]):
             st.image(person["photo_path"], width=250, caption="Applicant Photo")
         else:
             st.warning("No photo uploaded.")
 
-        # FIX 4: Admin can download resume file
+        # Resume download
         if person["resume_path"] and os.path.exists(person["resume_path"]):
             with open(person["resume_path"], "rb") as file:
                 st.download_button(
@@ -503,6 +525,32 @@ def show_admin_panel():
                 )
         else:
             st.info("No resume uploaded.")
+
+        st.markdown("---")
+
+        # -----------------------------
+        # DELETE APPLICANT
+        # -----------------------------
+        st.error("⚠ Delete this applicant")
+
+        if st.button("Delete Applicant"):
+            try:
+                # Delete photo file
+                if person["photo_path"] and os.path.exists(person["photo_path"]):
+                    os.remove(person["photo_path"])
+
+                # Delete resume file
+                if person["resume_path"] and os.path.exists(person["resume_path"]):
+                    os.remove(person["resume_path"])
+
+                # Delete from database
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM applicants WHERE id=?", (selected_id,))
+                conn.commit()
+
+                st.success("Applicant deleted successfully! Refresh the page.")
+            except Exception as e:
+                st.error(f"Failed to delete applicant: {e}")
 
     conn.close()
 
