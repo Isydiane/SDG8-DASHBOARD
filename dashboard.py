@@ -20,8 +20,6 @@ st.set_page_config(
 
 st.markdown(
     """
-    st.markdown(
-    """
     <style>
     /* Page background */
     .stApp { background-color: #f5e6c4; }
