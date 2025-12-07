@@ -1,3 +1,4 @@
+# full updated dashboard.py
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -433,33 +434,42 @@ def show_admin_panel():
     # -----------------------------
     # LOAD APPLICANT DATABASE
     # -----------------------------
-    conn = sqlite3.connect("applicants.db")
-    df = pd.read_sql_query("SELECT * FROM applicants", conn)
+    df = pd.DataFrame()
+    try:
+        df = pd.read_sql_query("SELECT * FROM applicants", conn)
+    except Exception:
+        df = pd.DataFrame()
 
-    # Ensure required columns exist
-    required_cols = ["id", "full_name", "job_applied", "photo_path", "resume_path"]
-    for col in required_cols:
-        if col not in df.columns:
-            df[col] = None
+    # ensure columns exist for display
+    if df is None or df.empty:
+        df = pd.DataFrame(columns=["id", "full_name", "age", "age_group", "address", "skills", "education", "experience", "job_applied", "photo_blob"])
 
     # -----------------------------
     # YOUTH EMPLOYMENT GRAPH
     # -----------------------------
     st.subheader("Youth Job Application Graph")
 
-    job_counts = (
-        df["job_applied"]
-        .dropna()
-        .replace("", None)
-        .dropna()
-        .value_counts()
-        .sort_index()
-    )
+    # compute counts safely
+    if "job_applied" in df.columns:
+        job_counts = (
+            df["job_applied"]
+            .dropna()
+            .replace("", None)
+            .dropna()
+            .value_counts()
+            .sort_index()
+        )
+    else:
+        job_counts = pd.Series(dtype=int)
 
-    if len(job_counts) == 0:
+    if job_counts.empty:
         st.info("No job applications yet.")
     else:
-        st.bar_chart(job_counts)
+        # convert to dataframe for nicer plotting
+        jc_df = job_counts.rename_axis("job").reset_index(name="count")
+        fig = px.bar(jc_df, x="job", y="count", title="Applications per Job")
+        fig.update_layout(xaxis_title="Job", yaxis_title="Number of Applications", title_x=0.5)
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
 
@@ -468,91 +478,81 @@ def show_admin_panel():
     # -----------------------------
     st.subheader("Filters")
 
-    job_list = ["All"] + sorted(
-        [j for j in df["job_applied"].dropna().unique() if j.strip() != ""]
-    )
+    job_list = ["All"]
+    if "job_applied" in df.columns:
+        unique_jobs = [j for j in df["job_applied"].dropna().unique() if str(j).strip() != ""]
+        job_list = ["All"] + sorted(unique_jobs)
+
     job_filter = st.selectbox("Filter by job applied:", job_list)
     name_filter = st.text_input("Search applicant name:")
 
     filtered = df.copy()
-
     if job_filter != "All":
         filtered = filtered[filtered["job_applied"] == job_filter]
 
     if name_filter:
-        filtered = filtered[filtered["full_name"].str.contains(name_filter, case=False, na=False)]
+        if "full_name" in filtered.columns:
+            filtered = filtered[filtered["full_name"].str.contains(name_filter, case=False, na=False)]
 
     st.write(f"Showing **{len(filtered)}** applicants")
 
-    st.dataframe(
-        filtered[["id", "full_name", "job_applied", "photo_path", "resume_path"]],
-        use_container_width=True
-    )
+    # show compact table
+    show_cols = [c for c in ["id", "full_name", "age", "job_applied"] if c in filtered.columns]
+    if show_cols:
+        st.dataframe(filtered[show_cols].rename(columns={"full_name": "Full Name", "job_applied": "Job Applied"}), use_container_width=True)
+    else:
+        st.write("No columns to show.")
+
+    st.markdown("---")
 
     # -----------------------------
     # VIEW & DELETE APPLICANT
     # -----------------------------
     st.subheader("View Applicant Details")
 
-    if len(filtered) == 0:
+    if filtered.empty:
         st.info("No applicants to view.")
-        return
+    else:
+        selected_id = st.selectbox("Select Applicant ID:", filtered["id"].tolist())
 
-    selected_id = st.selectbox(
-        "Select Applicant ID:",
-        filtered["id"].tolist()
-    )
+        if selected_id:
+            person = filtered[filtered["id"] == selected_id].iloc[0]
 
-    if selected_id:
-        person = filtered[filtered["id"] == selected_id].iloc[0]
+            st.write(f"### {person.get('full_name','')}")
+            st.write(f"**Job Applied:** {person.get('job_applied','')}")
 
-        st.write(f"### {person['full_name']}")
-        st.write(f"**Job Applied:** {person['job_applied']}")
-
-        # Show applicant photo
-        if person["photo_path"] and os.path.exists(person["photo_path"]):
-            st.image(person["photo_path"], width=250, caption="Applicant Photo")
-        else:
-            st.warning("No photo uploaded.")
-
-        # Resume download
-        if person["resume_path"] and os.path.exists(person["resume_path"]):
-            with open(person["resume_path"], "rb") as file:
+            # Show uploaded image (photo_blob)
+            b64 = person.get("photo_blob", None)
+            img_bytes = base64_to_bytes(b64)
+            if img_bytes:
+                # display image
+                try:
+                    st.image(img_bytes, width=300, caption="Uploaded Photo / Resume")
+                except Exception:
+                    st.write("Uploaded binary cannot be displayed as image.")
+                # provide download of the binary
                 st.download_button(
-                    label="Download Resume",
-                    data=file,
-                    file_name=os.path.basename(person["resume_path"])
+                    label="Download uploaded image/resume",
+                    data=img_bytes,
+                    file_name=f"applicant_{selected_id}.png",
+                    mime="image/png",
                 )
-        else:
-            st.info("No resume uploaded.")
+            else:
+                st.warning("No image/resume uploaded for this applicant.")
 
-        st.markdown("---")
+            st.markdown("---")
+            st.error("⚠ Delete this applicant (this cannot be undone)")
 
-        # -----------------------------
-        # DELETE APPLICANT
-        # -----------------------------
-        st.error("⚠ Delete this applicant")
-
-        if st.button("Delete Applicant"):
-            try:
-                # Delete photo file
-                if person["photo_path"] and os.path.exists(person["photo_path"]):
-                    os.remove(person["photo_path"])
-
-                # Delete resume file
-                if person["resume_path"] and os.path.exists(person["resume_path"]):
-                    os.remove(person["resume_path"])
-
-                # Delete from database
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM applicants WHERE id=?", (selected_id,))
-                conn.commit()
-
-                st.success("Applicant deleted successfully! Refresh the page.")
-            except Exception as e:
-                st.error(f"Failed to delete applicant: {e}")
-
-    conn.close()
+            if st.button("Delete Applicant"):
+                try:
+                    # Delete from database
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM applicants WHERE id=?", (int(selected_id),))
+                    conn.commit()
+                    st.success("Applicant deleted successfully!")
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Failed to delete applicant: {e}")
 
     st.markdown("---")
     col1, col2 = st.columns([1, 1])
