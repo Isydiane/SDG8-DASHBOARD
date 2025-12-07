@@ -428,94 +428,83 @@ def show_applicant_dashboard(username: str):
 # Admin panel (view photos from base64) - FULLY REWRITTEN
 # ---------------------------
 def show_admin_panel():
-    st.markdown(
-        '<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>',
-        unsafe_allow_html=True,
-    )
-    st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
+    st.title("Applicant Database (Admin Panel)")
 
-    # Load applicants fresh
-    try:
-        applicants = pd.read_sql("SELECT * FROM applicants", conn)
-    except Exception:
-        applicants = pd.DataFrame(columns=["id", "full_name", "age", "age_group", "address", "skills", "education", "experience", "job_applied", "photo_blob"])
+    # -----------------------------
+    # LOAD APPLICANT DATABASE
+    # -----------------------------
+    conn = sqlite3.connect("applicants.db")
+    df = pd.read_sql_query("SELECT * FROM applicants", conn)
 
-    # Top controls: job filter, name search
-    colf1, colf2, colf3 = st.columns([2, 3, 1])
-    with colf1:
-        jobs_present = ["All"] + sorted([j for j in applicants["job_applied"].dropna().unique() if j])
-        job_filter = st.selectbox("Filter by job", options=jobs_present, index=0)
-    with colf2:
-        name_search = st.text_input("Search applicant name...", key="admin_name_search")
-    with colf3:
-        if st.button("Refresh Table"):
-            st.experimental_rerun()
+    # FIX 1: avoid KeyError by checking which columns exist
+    expected_columns = ["id", "full_name", "job_applied", "photo_path", "resume_path"]
+    for col in expected_columns:
+        if col not in df.columns:
+            df[col] = None
 
-    # Apply filters
-    filtered = applicants.copy()
+    # -----------------------------
+    # FILTERS
+    # -----------------------------
+    st.subheader("Filters")
+
+    # FIX 2: If job_applied column is empty → no crash
+    job_list = ["All"] + sorted([j for j in df["job_applied"].dropna().unique() if j.strip() != ""])
+    job_filter = st.selectbox("Filter by job applied:", job_list)
+
+    name_filter = st.text_input("Search applicant name:")
+
+    filtered = df.copy()
+
     if job_filter != "All":
         filtered = filtered[filtered["job_applied"] == job_filter]
-    if name_search:
-        filtered = filtered[filtered["full_name"].str.contains(name_search, case=False, na=False)]
 
-    if filtered.empty:
-        st.info("No applicants found with current filters.")
-    else:
-        # Display table
-        show_cols = [c for c in ["id", "full_name", "age", "job_applied"] if c in filtered.columns]
-        st.dataframe(filtered[show_cols].rename(columns={"full_name": "Full Name", "job_applied": "Job Applied"}), use_container_width=True)
+    if name_filter:
+        filtered = filtered[filtered["full_name"].str.contains(name_filter, case=False, na=False)]
 
-        # Select applicant for detail/edit
-        applicant_ids = filtered["id"].tolist()
-        chosen = st.selectbox("Select Applicant ID to view / edit details", options=applicant_ids, key="admin_choose_id")
+    st.write(f"Showing **{len(filtered)}** applicants")
 
-        # fetch full record for chosen id (from DB to ensure freshest)
-        rec_df = pd.read_sql("SELECT * FROM applicants WHERE id=?", conn, params=(int(chosen),))
-        if not rec_df.empty:
-            rec = rec_df.iloc[0]
+    # -----------------------------
+    # DISPLAY APPLICANTS TABLE
+    # -----------------------------
+    st.dataframe(
+        filtered[["id", "full_name", "job_applied", "photo_path", "resume_path"]],
+        use_container_width=True
+    )
 
-            st.markdown("### Applicant Details")
-            # layout detail + image
-            left, right = st.columns([2, 1])
-            with left:
-                # Editable fields
-                edit_name = st.text_input("Full Name", value=rec.get("full_name", ""), key="edit_name")
-                edit_age = st.number_input("Age", min_value=0, max_value=120, value=int(rec.get("age") or 0), key="edit_age")
-                edit_address = st.text_area("Address", value=rec.get("address", ""), key="edit_address")
-                edit_skills = st.text_input("Skills", value=rec.get("skills", ""), key="edit_skills")
-                edit_education = st.text_input("Education", value=rec.get("education", ""), key="edit_education")
-                edit_experience = st.number_input("Experience (yrs)", min_value=0, max_value=100, value=int(rec.get("experience") or 0), key="edit_experience")
-                edit_job = st.text_input("Job Applied", value=rec.get("job_applied", ""), key="edit_job")
-            with right:
-                b64 = rec.get("photo_blob", None)
-                img_bytes = base64_to_bytes(b64)
-                if img_bytes:
-                    st.image(img_bytes, width=260, caption="Uploaded Photo / Resume")
-                    # download raw bytes
-                    st.download_button("Download Image", img_bytes, file_name=f"applicant_{chosen}.png")
-                else:
-                    st.info("No photo available for this applicant.")
+    # -----------------------------
+    # VIEW SELECTED APPLICANT
+    # -----------------------------
+    st.subheader("View Applicant Details")
 
-            # Action buttons: Save, Delete, Export filtered CSV
-            action_col1, action_col2, action_col3 = st.columns([1,1,1])
-            with action_col1:
-                if st.button("Save changes", key="admin_save"):
-                    # update DB
-                    age_group = get_age_group(int(edit_age)) if edit_age else None
-                    cursor.execute("""UPDATE applicants SET full_name=?, age=?, age_group=?, address=?, skills=?, education=?, experience=?, job_applied=? WHERE id=?""",
-                                   (edit_name.strip(), int(edit_age), age_group, edit_address.strip(), edit_skills.strip(), edit_education.strip(), int(edit_experience), edit_job.strip(), int(chosen)))
-                    conn.commit()
-                    st.success("Applicant updated.")
-                    st.experimental_rerun()
-            with action_col2:
-                if st.button("Delete applicant", key="admin_delete"):
-                    cursor.execute("DELETE FROM applicants WHERE id=?", (int(chosen),))
-                    conn.commit()
-                    st.success("Applicant deleted.")
-                    st.experimental_rerun()
-            with action_col3:
-                csv = filtered.to_csv(index=False).encode("utf-8")
-                st.download_button("Export filtered CSV", csv, "applicants_filtered.csv", "text/csv")
+    selected_id = st.selectbox(
+        "Select Applicant ID:",
+        filtered["id"].tolist() if len(filtered) > 0 else []
+    )
+
+    if selected_id:
+        person = filtered[filtered["id"] == selected_id].iloc[0]
+
+        st.write(f"### {person['full_name']}")
+        st.write(f"**Job Applied:** {person['job_applied']}")
+
+        # FIX 3: Admin sees uploaded picture
+        if person["photo_path"] and os.path.exists(person["photo_path"]):
+            st.image(person["photo_path"], width=250, caption="Applicant Photo")
+        else:
+            st.warning("No photo uploaded.")
+
+        # FIX 4: Admin can download resume file
+        if person["resume_path"] and os.path.exists(person["resume_path"]):
+            with open(person["resume_path"], "rb") as file:
+                st.download_button(
+                    label="Download Resume",
+                    data=file,
+                    file_name=os.path.basename(person["resume_path"])
+                )
+        else:
+            st.info("No resume uploaded.")
+
+    conn.close()
 
     st.markdown("---")
     col1, col2 = st.columns([1, 1])
