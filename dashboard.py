@@ -157,7 +157,32 @@ def show_admin_dashboard():
     st.dataframe(applicants, use_container_width=True)
 
 # --- Youth charts ---
-def show_admin_dashboard():
+def show_youth_charts():
+    st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
+    st.markdown('<h4 class="section-title">Youth Economic Charts</h4>', unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("### Select a Chart to View")
+        if st.button("Unemployment Rate", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
+        if st.button("Underemployment Rate", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
+        if st.button("NEET Rate", use_container_width=True):
+            st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
+        if st.button("Youth Wages", use_container_width=True):
+            st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
+        if st.button("View Data Table", use_container_width=True):
+            st.table(df_base)
+
+        st.markdown("---")
+        if st.button("Back to Applicant Dashboard", use_container_width=True):
+            st.session_state["stage"] = "dashboard"
+        if st.button("Logout / Back to Login", use_container_width=True):
+            st.session_state["stage"] = "login"
+
+# --- Admin panel with editing and charts ---
+def show_admin_panel():
     st.markdown('<h3 class="section-title">Youth Economic Data Dashboard – PESO Santa Barbara</h3>', unsafe_allow_html=True)
     st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
 
@@ -188,31 +213,16 @@ def show_admin_dashboard():
                 else:
                     st.warning("No applicants selected.")
         with col2:
-            if st.button("Back to Dashboard", use_container_width=True):
+            if st.button("View Youth Charts", use_container_width=True):
                 st.session_state["stage"] = "charts"
     else:
         st.info("No applicants found in the database.")
-        if st.button("Back to Dashboard", use_container_width=True):
+        if st.button("View Youth Charts", use_container_width=True):
             st.session_state["stage"] = "charts"
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("### Select a Chart to View")
-        if st.button("Unemployment Rate", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Unemployment_Rate (%)"])
-        if st.button("Underemployment Rate", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Underemployment_Rate (%)"])
-        if st.button("NEET Rate", use_container_width=True):
-            st.line_chart(df_base.set_index("Age_Group")["NEET_Rate (%)"])
-        if st.button("Youth Wages", use_container_width=True):
-            st.bar_chart(df_base.set_index("Age_Group")["Average_Monthly_Wage (PHP)"])
-        if st.button("View Data Table", use_container_width=True):
-            st.table(df_base)
-
-        st.markdown("---")
-        if st.button("Logout / Back to Login", use_container_width=True):
-            st.session_state["stage"] = "login"
-
+    st.markdown("---")
+    if st.button("Logout / Back to Login", use_container_width=True):
+        st.session_state["stage"] = "login"
 
 # --- Login screen ---
 def login_screen():
@@ -230,7 +240,7 @@ def login_screen():
         if st.button("Login", use_container_width=True):
             if user_type == "Admin" and username == "admin" and password == "1234":
                 st.success("Welcome Admin!")
-                st.session_state["stage"] = "admin"
+                st.session_state["stage"] = "admin_panel"
             elif user_type == "Applicant":
                 cursor.execute("SELECT password FROM applicant_credentials WHERE username=?", (username.strip(),))
                 row = cursor.fetchone()
@@ -254,9 +264,8 @@ def login_screen():
                     st.session_state["username"] = username
                     st.session_state["stage"] = "dashboard"
 
-                # >>> FIX: Move this outside the above block <<<
-                if st.button("View Youth Charts", use_container_width=True):
-                 st.session_state["stage"] = "charts"
+        if st.button("View Youth Charts", use_container_width=True):
+            st.session_state["stage"] = "charts"
 
         if st.button("Back to Intro", use_container_width=True):
             st.session_state["stage"] = "intro"
@@ -273,8 +282,7 @@ elif st.session_state["stage"] == "dashboard":
     show_applicant_dashboard(st.session_state["username"])
 elif st.session_state["stage"] == "admin":
     show_admin_dashboard()
-# --- Router ---
-if st.session_state["stage"] == "charts":
-    show_youth_charts()  # ← This line must come after the function definition
-
-
+elif st.session_state["stage"] == "admin_panel":
+    show_admin_panel()
+elif st.session_state["stage"] == "charts":
+    show_youth_charts()
