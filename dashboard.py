@@ -425,7 +425,7 @@ def show_applicant_dashboard(username: str):
 
 
 # ---------------------------
-# Admin panel (view photos from base64)
+# Admin panel (view photos from base64) - FULLY REWRITTEN
 # ---------------------------
 def show_admin_panel():
     st.markdown(
@@ -434,18 +434,24 @@ def show_admin_panel():
     )
     st.markdown('<h4 class="section-title">Applicant Database (Admin Panel)</h4>', unsafe_allow_html=True)
 
-    # controls: filter by job and search by name
-    st.markdown("**Filters**")
+    # Load applicants fresh
     try:
         applicants = pd.read_sql("SELECT * FROM applicants", conn)
     except Exception:
         applicants = pd.DataFrame(columns=["id", "full_name", "age", "age_group", "address", "skills", "education", "experience", "job_applied", "photo_blob"])
 
-    jobs_present = ["All"] + sorted([j for j in applicants["job_applied"].dropna().unique() if j])
-    job_filter = st.selectbox("Filter by job", options=jobs_present, index=0)
-    name_search = st.text_input("Search applicant name...", key="admin_name_search")
+    # Top controls: job filter, name search
+    colf1, colf2, colf3 = st.columns([2, 3, 1])
+    with colf1:
+        jobs_present = ["All"] + sorted([j for j in applicants["job_applied"].dropna().unique() if j])
+        job_filter = st.selectbox("Filter by job", options=jobs_present, index=0)
+    with colf2:
+        name_search = st.text_input("Search applicant name...", key="admin_name_search")
+    with colf3:
+        if st.button("Refresh Table"):
+            st.experimental_rerun()
 
-    # filter dataframe
+    # Apply filters
     filtered = applicants.copy()
     if job_filter != "All":
         filtered = filtered[filtered["job_applied"] == job_filter]
@@ -455,50 +461,61 @@ def show_admin_panel():
     if filtered.empty:
         st.info("No applicants found with current filters.")
     else:
-        # show main table
+        # Display table
         show_cols = [c for c in ["id", "full_name", "age", "job_applied"] if c in filtered.columns]
         st.dataframe(filtered[show_cols].rename(columns={"full_name": "Full Name", "job_applied": "Job Applied"}), use_container_width=True)
 
-        # allow selecting an applicant id
+        # Select applicant for detail/edit
         applicant_ids = filtered["id"].tolist()
-        chosen = st.selectbox("Select Applicant ID to view details", options=applicant_ids)
+        chosen = st.selectbox("Select Applicant ID to view / edit details", options=applicant_ids, key="admin_choose_id")
 
-        if st.button("View Applicant Details"):
-            rec = applicants[applicants["id"] == chosen].iloc[0]
-            st.write("**Full Name:**", rec.get("full_name", ""))
-            st.write("**Age:**", rec.get("age", ""))
-            st.write("**Age Group:**", rec.get("age_group", ""))
-            st.write("**Address:**", rec.get("address", ""))
-            st.write("**Skills:**", rec.get("skills", ""))
-            st.write("**Education:**", rec.get("education", ""))
-            st.write("**Experience (yrs):**", rec.get("experience", ""))
-            st.write("**Job Applied:**", rec.get("job_applied", ""))
+        # fetch full record for chosen id (from DB to ensure freshest)
+        rec_df = pd.read_sql("SELECT * FROM applicants WHERE id=?", conn, params=(int(chosen),))
+        if not rec_df.empty:
+            rec = rec_df.iloc[0]
 
-            b64 = rec.get("photo_blob", None)
-            img_bytes = base64_to_bytes(b64)
-            if img_bytes:
-                st.image(img_bytes, width=300, caption="Uploaded Photo / Resume")
-            else:
-                st.warning("No photo available for this applicant.")
+            st.markdown("### Applicant Details")
+            # layout detail + image
+            left, right = st.columns([2, 1])
+            with left:
+                # Editable fields
+                edit_name = st.text_input("Full Name", value=rec.get("full_name", ""), key="edit_name")
+                edit_age = st.number_input("Age", min_value=0, max_value=120, value=int(rec.get("age") or 0), key="edit_age")
+                edit_address = st.text_area("Address", value=rec.get("address", ""), key="edit_address")
+                edit_skills = st.text_input("Skills", value=rec.get("skills", ""), key="edit_skills")
+                edit_education = st.text_input("Education", value=rec.get("education", ""), key="edit_education")
+                edit_experience = st.number_input("Experience (yrs)", min_value=0, max_value=100, value=int(rec.get("experience") or 0), key="edit_experience")
+                edit_job = st.text_input("Job Applied", value=rec.get("job_applied", ""), key="edit_job")
+            with right:
+                b64 = rec.get("photo_blob", None)
+                img_bytes = base64_to_bytes(b64)
+                if img_bytes:
+                    st.image(img_bytes, width=260, caption="Uploaded Photo / Resume")
+                    # download raw bytes
+                    st.download_button("Download Image", img_bytes, file_name=f"applicant_{chosen}.png")
+                else:
+                    st.info("No photo available for this applicant.")
 
-        # admin actions
-        colA, colB, colC = st.columns([1, 1, 1])
-        with colA:
-            if st.button("Delete selected applicant"):
-                if st.session_state.get("admin_chosen_delete") is not None:
-                    # not used; prefer chosen selectbox value
-                    pass
-                if chosen:
+            # Action buttons: Save, Delete, Export filtered CSV
+            action_col1, action_col2, action_col3 = st.columns([1,1,1])
+            with action_col1:
+                if st.button("Save changes", key="admin_save"):
+                    # update DB
+                    age_group = get_age_group(int(edit_age)) if edit_age else None
+                    cursor.execute("""UPDATE applicants SET full_name=?, age=?, age_group=?, address=?, skills=?, education=?, experience=?, job_applied=? WHERE id=?""",
+                                   (edit_name.strip(), int(edit_age), age_group, edit_address.strip(), edit_skills.strip(), edit_education.strip(), int(edit_experience), edit_job.strip(), int(chosen)))
+                    conn.commit()
+                    st.success("Applicant updated.")
+                    st.experimental_rerun()
+            with action_col2:
+                if st.button("Delete applicant", key="admin_delete"):
                     cursor.execute("DELETE FROM applicants WHERE id=?", (int(chosen),))
                     conn.commit()
                     st.success("Applicant deleted.")
                     st.experimental_rerun()
-        with colB:
-            csv = filtered.to_csv(index=False).encode("utf-8")
-            st.download_button("Export filtered CSV", csv, "applicants_filtered.csv", "text/csv")
-        with colC:
-            if st.button("Refresh Table"):
-                st.experimental_rerun()
+            with action_col3:
+                csv = filtered.to_csv(index=False).encode("utf-8")
+                st.download_button("Export filtered CSV", csv, "applicants_filtered.csv", "text/csv")
 
     st.markdown("---")
     col1, col2 = st.columns([1, 1])
@@ -507,7 +524,6 @@ def show_admin_panel():
             st.session_state["stage"] = "login"
     with col2:
         if st.button("Logout"):
-            # clear session
             for k in ["username", "selected_job", "job_search"]:
                 if k in st.session_state:
                     del st.session_state[k]
