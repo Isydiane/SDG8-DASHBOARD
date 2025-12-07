@@ -30,7 +30,7 @@ st.markdown(
         justify-content: center;
         align-items: center;
         width: 60px;
-        margin-left: auto;
+        margin-left: 30px;
         margin-right: auto;
     }
 
@@ -778,3 +778,4 @@ elif stage == "admin_panel":
 
 elif stage == "charts":
     show_youth_charts()
+
